@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8000/auth"; // Adjust to FastAPI port
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"}/auth`; // Adjust to FastAPI port
 
 export type AuthPayload = {
   email: string;
