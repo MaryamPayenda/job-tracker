@@ -1,108 +1,129 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from database import get_db
-from models.job import Job
+from models.job import Job  # This uses your exact Pydantic model
 from routes.auth import get_current_user
+from psycopg2.extras import RealDictCursor
 
-def empty_to_none(value):
-    if value == "" or value == "string":
-        return None
-    return value
+# Using standard prefixing clean tags for auto-generated docs
+router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
-router = APIRouter()
-
-def format_job(row):
-    return {
-        "id": row[0],
-        "company": row[1],
-        "role": row[2],
-        "status": row[3],
-        "notes": row[4],
-        "applied_at": str(row[5]),
-        "applied_date": str(row[6]) if row[6] else None,
-        "job_url": row[7],
-        "contact_name": row[8],
-        "contact_email": row[9],
-        "interview_date": str(row[10]) if row[10] else None,
-        "salary": row[11],
-        "location": row[12],
-        "priority": row[13],
-    }
-
-@router.get("/jobs")
+@router.get("", response_model=list[dict])
 def get_jobs(current_user: str = Depends(get_current_user)):
     conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM jobs ORDER BY applied_at DESC")
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return [format_job(row) for row in rows]
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                "SELECT * FROM jobs WHERE user_email = %s ORDER BY applied_at DESC", 
+                (current_user,)
+            )
+            rows = cursor.fetchall()
+            
+            # Simple string conversion for dates so JSON serialization passes smoothly
+            for row in rows:
+                if row.get("applied_at"): row["applied_at"] = str(row["applied_at"])
+                if row.get("applied_date"): row["applied_date"] = str(row["applied_date"])
+                if row.get("interview_date"): row["interview_date"] = str(row["interview_date"])
+            return rows
+    finally:
+        conn.close()
 
-@router.get("/jobs/{job_id}")
+@router.get("/{job_id}", response_model=dict)
 def get_job(job_id: int, current_user: str = Depends(get_current_user)):
     conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM jobs WHERE id = %s", (job_id,))
-    row = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return format_job(row)
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                "SELECT * FROM jobs WHERE id = %s AND user_email = %s", 
+                (job_id, current_user)
+            )
+            row = cursor.fetchone()
+            
+            if not row:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+                
+            if row.get("applied_at"): row["applied_at"] = str(row["applied_at"])
+            if row.get("applied_date"): row["applied_date"] = str(row["applied_date"])
+            if row.get("interview_date"): row["interview_date"] = str(row["interview_date"])
+            return row
+    finally:
+        conn.close()
 
-@router.post("/jobs")
+@router.post("", status_code=status.HTTP_201_CREATED)
 def create_job(job: Job, current_user: str = Depends(get_current_user)):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        """INSERT INTO jobs 
-        (company, role, status, notes, applied_date, job_url, contact_name, contact_email, interview_date, salary, location, priority) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *""",
-        (job.company, job.role, job.status, empty_to_none(job.notes),
-         empty_to_none(job.applied_date), empty_to_none(job.job_url),
-         empty_to_none(job.contact_name), empty_to_none(job.contact_email),
-         empty_to_none(job.interview_date), empty_to_none(job.salary),
-         empty_to_none(job.location), empty_to_none(job.priority))
-    )
-    row = cursor.fetchone()
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return format_job(row)
+    # model_dump converts Pydantic object directly into a clean Python dictionary
+    job_data = job.model_dump()
+    
+    # Replace frontend placeholder "string" defaults with clean database NULLs (None)
+    for key, val in job_data.items():
+        if val == "string" or val == "":
+            job_data[key] = None
 
-@router.put("/jobs/{job_id}")
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                """INSERT INTO jobs 
+                (user_email, company, role, status, notes, applied_date, job_url, contact_name, contact_email, interview_date, salary, location, priority) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *""",
+                (current_user, job_data['company'], job_data['role'], job_data['status'], job_data['notes'],
+                 job_data['applied_date'], job_data['job_url'], job_data['contact_name'], job_data['contact_email'],
+                 job_data['interview_date'], job_data['salary'], job_data['location'], job_data['priority'])
+            )
+            row = cursor.fetchone()
+            conn.commit()
+            
+            if row.get("applied_at"): row["applied_at"] = str(row["applied_at"])
+            if row.get("applied_date"): row["applied_date"] = str(row["applied_date"])
+            if row.get("interview_date"): row["interview_date"] = str(row["interview_date"])
+            return row
+    finally:
+        conn.close()
+
+@router.put("/{job_id}", response_model=dict)
 def update_job(job_id: int, job: Job, current_user: str = Depends(get_current_user)):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        """UPDATE jobs SET 
-        company = %s, role = %s, status = %s, notes = %s, applied_date = %s,
-        job_url = %s, contact_name = %s, contact_email = %s, interview_date = %s,
-        salary = %s, location = %s, priority = %s
-        WHERE id = %s RETURNING *""",
-        (job.company, job.role, job.status, empty_to_none(job.notes),
-         empty_to_none(job.applied_date), empty_to_none(job.job_url),
-         empty_to_none(job.contact_name), empty_to_none(job.contact_email),
-         empty_to_none(job.interview_date), empty_to_none(job.salary),
-         empty_to_none(job.location), empty_to_none(job.priority), job_id)
-    )
-    row = cursor.fetchone()
-    conn.commit()
-    cursor.close()
-    conn.close()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return format_job(row)
+    job_data = job.model_dump()
+    for key, val in job_data.items():
+        if val == "string" or val == "":
+            job_data[key] = None
 
-@router.delete("/jobs/{job_id}")
+    conn = get_db()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                """UPDATE jobs SET 
+                company = %s, role = %s, status = %s, notes = %s, applied_date = %s,
+                job_url = %s, contact_name = %s, contact_email = %s, interview_date = %s,
+                salary = %s, location = %s, priority = %s
+                WHERE id = %s AND user_email = %s RETURNING *""",
+                (job_data['company'], job_data['role'], job_data['status'], job_data['notes'],
+                 job_data['applied_date'], job_data['job_url'], job_data['contact_name'], job_data['contact_email'],
+                 job_data['interview_date'], job_data['salary'], job_data['location'], job_data['priority'], 
+                 job_id, current_user)
+            )
+            row = cursor.fetchone()
+            conn.commit()
+            
+            if not row:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found or unauthorized")
+                
+            if row.get("applied_at"): row["applied_at"] = str(row["applied_at"])
+            if row.get("applied_date"): row["applied_date"] = str(row["applied_date"])
+            if row.get("interview_date"): row["interview_date"] = str(row["interview_date"])
+            return row
+    finally:
+        conn.close()
+
+@router.delete("/{job_id}")
 def delete_job(job_id: int, current_user: str = Depends(get_current_user)):
     conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM jobs WHERE id = %s RETURNING id", (job_id,))
-    row = cursor.fetchone()
-    conn.commit()
-    cursor.close()
-    conn.close()
-    if row is None:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return {"message": "Job deleted"}
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("DELETE FROM jobs WHERE id = %s AND user_email = %s RETURNING id", (job_id, current_user))
+            row = cursor.fetchone()
+            conn.commit()
+            
+            if not row:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found or unauthorized")
+            return {"message": "Job deleted successfully"}
+    finally:
+        conn.close()

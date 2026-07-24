@@ -61,6 +61,12 @@ export default function Dashboard() {
             {showForm ? "Cancel" : "+ Add Job"}
           </button>
           <button
+            onClick={() => navigate("/profile")}
+            className="border border-gray-200 hover:border-gray-300 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+          >
+            Profile
+          </button>
+          <button
             onClick={handleLogout}
             className="border border-gray-200 hover:border-gray-300 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
           >
