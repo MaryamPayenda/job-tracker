@@ -12,7 +12,7 @@ app = FastAPI()
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://job-tracker.vercel.app",
+    "https://job-tracker-beige-ten.vercel.app",
 ]
 
 # If you set FRONTEND_URL in Render, include it dynamically:
