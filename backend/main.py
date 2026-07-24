@@ -4,14 +4,27 @@ from routes.jobs import router as jobs_router
 from routes.auth import router as auth_router
 from routes.ai import router as ai_router
 from routes.profile import router as profile_router
+import os
 
 app = FastAPI()
 
+# Get origins from environment variable OR set sensible defaults
+origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://job-tracker-y82g.vercel.app",  # Your Vercel frontend!
+]
+
+# If you set FRONTEND_URL in Render, include it dynamically:
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url and frontend_url not in origins:
+    origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=origins,  # Or set allow_origins=["*"] during testing
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["*"],    # Allows POST, GET, OPTIONS, PUT, DELETE
     allow_headers=["*"],
 )
 
