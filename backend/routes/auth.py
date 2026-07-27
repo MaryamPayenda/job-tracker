@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from database import get_db
 from models.user import RegisterUser, LoginUser, ChangePasswordRequest, ForgotPasswordRequest, ResetPasswordSubmit
-from passlib.context import CryptContext
+import bcrypt
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
@@ -15,8 +15,6 @@ load_dotenv()
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
@@ -27,22 +25,23 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", 587)) if os.getenv("SMTP_PORT") else 587
 SMTP_USERNAME = os.getenv("SMTP_USERNAME")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
-def hash_password(password: str):
-    return pwd_context.hash(password)
+# Direct bcrypt implementations (compatible with Python 3.14)
+def hash_password(password: str) -> str:
+    pwd_bytes = password.encode("utf-8")
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
 
-def verify_password(plain: str, hashed: str):
-    return pwd_context.verify(plain, hashed)
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 def create_token(email: str):
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     return jwt.encode({"sub": email, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
 
 def send_reset_email(to_email: str, token: str):
-    # This URL targets your local React app endpoint
-    reset_url = f"http://localhost:5173/reset-password?token={token}"
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    reset_url = f"{frontend_url}/reset-password?token={token}"
     
-    # Fallback/Testing safety net: If you haven't set up SMTP credentials in .env yet,
-    # it prints the token to your terminal so you can test your API immediately!
     if not SMTP_USERNAME or not SMTP_PASSWORD:
         print(f"\n[LOCAL TEST] Password reset requested for: {to_email}")
         print(f"[LOCAL TEST] Click this link to test your React app: {reset_url}\n")
@@ -176,7 +175,6 @@ def reset_password(data: ResetPasswordSubmit):
     finally:
         conn.close()
 
-# Export this out cleanly for other route dependencies
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
