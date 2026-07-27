@@ -22,7 +22,8 @@ if frontend_url and frontend_url not in origins:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Or set allow_origins=["*"] during testing
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Matches ALL Vercel deployment URLs
     allow_credentials=True,
     allow_methods=["*"],    # Allows POST, GET, OPTIONS, PUT, DELETE
     allow_headers=["*"],
