@@ -1,3 +1,4 @@
+from database import get_db
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.jobs import router as jobs_router
@@ -33,6 +34,15 @@ app.include_router(jobs_router)
 app.include_router(auth_router)
 app.include_router(ai_router)
 app.include_router(profile_router)
+
+@app.get("/test-db")
+def test_db():
+    try:
+        conn = get_db()
+        conn.close()
+        return {"message": "Database connected successfully!"}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/")
 def root():
