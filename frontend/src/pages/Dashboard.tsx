@@ -47,7 +47,6 @@ export default function Dashboard() {
       {/* Navbar */}
       <Navbar
         showAuth={true}
-        showAddJob={true}
         onAddJob={() => setShowForm(!showForm)}
       />
       <div className="max-w-4xl mx-auto px-4 py-8">

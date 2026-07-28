@@ -5,14 +5,9 @@ import { useAuth } from "../context/AuthContext";
 interface NavbarProps {
   showAuth?: boolean;
   onAddJob?: () => void;
-  showAddJob?: boolean;
 }
 
-export default function Navbar({
-  showAuth = false,
-  onAddJob,
-  showAddJob = false,
-}: NavbarProps) {
+export default function Navbar({ showAuth = false, onAddJob }: NavbarProps) {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
@@ -27,12 +22,14 @@ export default function Navbar({
 
       {showAuth && (
         <div className="flex gap-3">
-          <button
-            onClick={onAddJob}
-            className="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-          >
-            + Add Job
-          </button>
+          {onAddJob && (
+            <button
+              onClick={onAddJob}
+              className="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+            >
+              + Add Job
+            </button>
+          )}
           <button
             onClick={() => navigate("/profile")}
             className="border border-gray-200 hover:border-gray-300 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
