@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Landing from "./pages/Landing";
 
 function App() {
   const { token } = useAuth();
@@ -13,9 +14,7 @@ function App() {
     <Routes>
       <Route
         path="/"
-        element={
-          token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
-        }
+        element={token ? <Navigate to="/dashboard" /> : <Landing />}
       />
       <Route
         path="/login"
@@ -23,11 +22,11 @@ function App() {
       />
       <Route
         path="/dashboard"
-        element={token ? <Dashboard /> : <Navigate to="/login" />}
+        element={token ? <Dashboard /> : <Navigate to="/" />}
       />
       <Route
         path="/profile"
-        element={token ? <Profile /> : <Navigate to="/login" />}
+        element={token ? <Profile /> : <Navigate to="/" />}
       />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />

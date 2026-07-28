@@ -36,4 +36,4 @@ app.include_router(profile_router)
 
 @app.get("/")
 def root():
-    return {"message": "Job Tracker API is running"}
+    return {"message": "Trackly API is running"}

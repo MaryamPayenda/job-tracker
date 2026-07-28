@@ -1,4 +1,4 @@
-# Job Tracker — Full Stack AI App
+# Trackly — Full Stack AI App
 
 A job application tracker with AI-powered cover letter generation in English and German.
 

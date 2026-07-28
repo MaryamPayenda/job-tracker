@@ -2,15 +2,14 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../context/AuthContext";
 import { getJobs, deleteJob } from "../api/jobs";
-import { useNavigate } from "react-router-dom";
 import AddJobForm from "../components/AddJobForm";
 import JobCard from "../components/JobCard";
+import Navbar from "../components/Navbar";
 
 const STATUSES = ["All", "Applied", "Interview", "Offer", "Rejected"];
 
 export default function Dashboard() {
-  const { token, logout } = useAuth();
-  const navigate = useNavigate();
+  const { token } = useAuth();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
@@ -32,11 +31,6 @@ export default function Dashboard() {
     },
   });
 
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
-
   const filteredJobs = jobs
     ?.filter((job: any) =>
       activeFilter === "All" ? true : job.status === activeFilter,
@@ -51,30 +45,11 @@ export default function Dashboard() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Navbar */}
-      <nav className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-        <h1 className="font-bold text-gray-900">Job Tracker</h1>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-          >
-            {showForm ? "Cancel" : "+ Add Job"}
-          </button>
-          <button
-            onClick={() => navigate("/profile")}
-            className="border border-gray-200 hover:border-gray-300 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-          >
-            Profile
-          </button>
-          <button
-            onClick={handleLogout}
-            className="border border-gray-200 hover:border-gray-300 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </nav>
-
+      <Navbar
+        showAuth={true}
+        showAddJob={true}
+        onAddJob={() => setShowForm(!showForm)}
+      />
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Add Job Form */}
         {showForm && (
