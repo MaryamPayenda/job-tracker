@@ -98,7 +98,7 @@ export default function Profile() {
                 {...register("full_name", {
                   required: "Full name is required",
                 })}
-                placeholder="e.g. Maryam Payenda"
+                placeholder="e.g. Tom Smith"
                 className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
               />
               {errors.full_name && (
@@ -112,7 +112,7 @@ export default function Profile() {
               <label className="text-xs text-gray-400 px-1">Phone Number</label>
               <input
                 {...register("phone")}
-                placeholder="e.g. +49 155 67123576"
+                placeholder="e.g. +49 000 00000000"
                 className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
               />
             </div>
@@ -122,7 +122,7 @@ export default function Profile() {
               </label>
               <input
                 {...register("portfolio")}
-                placeholder="e.g. maryampayenda.dev"
+                placeholder="e.g. tom-smith.dev"
                 className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
               />
             </div>
@@ -131,7 +131,7 @@ export default function Profile() {
               <label className="text-xs text-gray-400 px-1">LinkedIn URL</label>
               <input
                 {...register("linkedin")}
-                placeholder="e.g. linkedin.com/in/maryam-payenda"
+                placeholder="e.g. linkedin.com/in/tom-smith"
                 className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
               />
             </div>
@@ -140,7 +140,7 @@ export default function Profile() {
               <label className="text-xs text-gray-400 px-1">GitHub URL</label>
               <input
                 {...register("github")}
-                placeholder="e.g. github.com/MaryamPayenda"
+                placeholder="e.g. github.com/tom-smith"
                 className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
               />
             </div>
@@ -148,7 +148,7 @@ export default function Profile() {
               <label className="text-xs text-gray-400 px-1">Location</label>
               <input
                 {...register("location")}
-                placeholder="e.g. Oschatz, Germany (Nationwide / Remote)"
+                placeholder="e.g. Berlin, Germany"
                 className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50"
               />
             </div>
@@ -159,7 +159,7 @@ export default function Profile() {
               </label>
               <textarea
                 {...register("background")}
-                placeholder="e.g. Fachinformatikerin für Anwendungsentwicklung with 3 years of experience in React and TypeScript..."
+                placeholder="e.g. Software Engineer with 3 years of experience in React and TypeScript..."
                 rows={4}
                 className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 resize-none"
               />
@@ -169,7 +169,7 @@ export default function Profile() {
               <label className="text-xs text-gray-400 px-1">Skills</label>
               <textarea
                 {...register("skills")}
-                placeholder="e.g. React, TypeScript, Next.js, Python, SQL, REST APIs, Docker, Git, Agile/Scrum"
+                placeholder="e.g. React, TypeScript, Next.js, Python, SQL, REST APIs, Docker, Git"
                 rows={3}
                 className="px-4 py-3 rounded-xl border border-gray-200 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-gray-50 resize-none"
               />
